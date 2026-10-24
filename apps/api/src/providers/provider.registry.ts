@@ -3,15 +3,19 @@ import { DirectMediaProvider } from './direct.provider.js';
 import { LocalFileProvider } from './local.provider.js';
 import { YouTubeProvider } from './youtube.provider.js';
 import { InstagramProvider } from './instagram.provider.js';
+import { TeraboxProvider } from './terabox.provider.js';
+import { WebVideoProvider } from './webvideo.provider.js';
 
 export class ProviderRegistry {
   private providers: MediaProvider[] = [];
 
   constructor() {
-    // Platform-specific first
+    // Dedicated platforms
     this.providers.push(new YouTubeProvider());
     this.providers.push(new InstagramProvider());
+    this.providers.push(new TeraboxProvider());
     this.providers.push(new DirectMediaProvider());
+    this.providers.push(new WebVideoProvider());
     this.providers.push(new LocalFileProvider());
   }
 

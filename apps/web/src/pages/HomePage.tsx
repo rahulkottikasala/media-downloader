@@ -57,7 +57,7 @@ export const HomePage: React.FC = () => {
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400">
             {activeTab === 'single'
-              ? 'YouTube Shorts, Instagram Reels, direct videos, and MP3 extraction in one click.'
+              ? 'YouTube, Instagram, TeraBox, web videos, and MP3 extraction in one click.'
               : 'Batch download entire YouTube playlists or multi-link collections as a single ZIP.'}
           </p>
         </div>

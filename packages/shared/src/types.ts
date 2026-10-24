@@ -1,4 +1,11 @@
-export type MediaPlatform = 'direct' | 'local' | 'youtube' | 'instagram' | 'unknown';
+export type MediaPlatform =
+  | 'direct'
+  | 'local'
+  | 'youtube'
+  | 'instagram'
+  | 'terabox'
+  | 'webvideo'
+  | 'unknown';
 
 export type MediaFormat = 'original' | 'mp4' | 'webm' | 'mp3' | 'm4a' | 'wav' | 'aac';
 

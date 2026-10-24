@@ -8,6 +8,8 @@ import {
   Film,
   Sparkles,
   Loader2,
+  Cloud,
+  Globe,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -65,7 +67,7 @@ export const CleanInputBar: React.FC<CleanInputBarProps> = ({
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste YouTube, Instagram, or media link..."
+            placeholder="Paste YouTube, Instagram, TeraBox, or web link..."
             disabled={isLoading}
             className="w-full bg-transparent text-sm text-zinc-100 placeholder-zinc-500 outline-none disabled:opacity-50"
           />
@@ -130,24 +132,41 @@ export const CleanInputBar: React.FC<CleanInputBarProps> = ({
 
       {/* Suggestions Row */}
       <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-        <span className="text-[11px] text-zinc-500">Try quick links:</span>
+        <span className="text-[11px] text-zinc-500">Supported:</span>
 
         <button
           type="button"
           onClick={handleSampleShort}
           className="cute-pill bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 border border-white/5 flex items-center gap-1.5"
+          title="Try a sample YouTube Short"
         >
           <Film className="w-3 h-3 text-red-400" />
-          <span>YouTube Short</span>
+          <span>YouTube</span>
         </button>
+
+        <span className="cute-pill bg-zinc-800/80 text-zinc-300 border border-white/5 flex items-center gap-1.5 cursor-default">
+          <Sparkles className="w-3 h-3 text-pink-400" />
+          <span>Instagram</span>
+        </span>
+
+        <span className="cute-pill bg-zinc-800/80 text-zinc-300 border border-white/5 flex items-center gap-1.5 cursor-default">
+          <Cloud className="w-3 h-3 text-sky-400" />
+          <span>TeraBox</span>
+        </span>
+
+        <span className="cute-pill bg-zinc-800/80 text-zinc-300 border border-white/5 flex items-center gap-1.5 cursor-default">
+          <Globe className="w-3 h-3 text-emerald-400" />
+          <span>Web Video (1000+)</span>
+        </span>
 
         <button
           type="button"
           onClick={handleSampleDirect}
           className="cute-pill bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 border border-white/5 flex items-center gap-1.5"
+          title="Try a sample direct MP4"
         >
-          <Sparkles className="w-3 h-3 text-cyan-400" />
-          <span>Sample MP4</span>
+          <Film className="w-3 h-3 text-cyan-400" />
+          <span>Direct MP4</span>
         </button>
 
         <button

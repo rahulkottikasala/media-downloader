@@ -20,6 +20,25 @@ interface CleanMediaCardProps {
   onReset: () => void;
 }
 
+function getPlatformLabel(platform: string): string {
+  switch (platform) {
+    case 'youtube':
+      return 'YouTube';
+    case 'instagram':
+      return 'Instagram';
+    case 'terabox':
+      return 'TeraBox';
+    case 'webvideo':
+      return 'Web Video';
+    case 'direct':
+      return 'Direct Video';
+    case 'local':
+      return 'Uploaded File';
+    default:
+      return 'Media';
+  }
+}
+
 export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onReset }) => {
   const [activeJob, setActiveJob] = useState<JobPublicDto | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -135,8 +154,8 @@ export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onRese
               alt={metadata.title}
               className="w-full h-full object-cover"
             />
-            <span className="absolute bottom-2 right-2 text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-black/70 text-white backdrop-blur-sm uppercase">
-              {metadata.platform}
+            <span className="absolute bottom-2 right-2 text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-black/70 text-white backdrop-blur-sm">
+              {getPlatformLabel(metadata.platform)}
             </span>
           </div>
         ) : (
@@ -147,8 +166,8 @@ export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onRese
 
         <div className="flex-1 min-w-0 space-y-1.5 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-white/5">
-              {metadata.platform}
+            <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-white/5">
+              {getPlatformLabel(metadata.platform)}
             </span>
             {metadata.durationFormatted && (
               <span className="text-xs text-zinc-400 flex items-center gap-1">

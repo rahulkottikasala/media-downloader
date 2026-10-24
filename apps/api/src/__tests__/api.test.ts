@@ -83,6 +83,29 @@ describe('MediaFlow API Test Suite', () => {
       );
     });
 
+    it('should detect TeraBox link and return terabox platform', async () => {
+      const res = await request(app)
+        .post('/api/media/inspect')
+        .send({ url: 'https://www.terabox.com/s/1UmsZ_phFHNDQkjR-MNrOqg' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.platform).toBe('terabox');
+      expect(res.body.title).toBeTruthy();
+    }, 15000);
+
+    it('should detect and inspect web video link', async () => {
+      const res = await request(app)
+        .post('/api/media/inspect')
+        .send({
+          url: 'https://xhamster46.desi/videos/i-argue-with-my-stepson-and-we-end-up-fucking-in-the-kitchen-xhB2bCM',
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.platform).toBe('webvideo');
+      expect(res.body.supported).toBe(true);
+      expect(res.body.title).toBeTruthy();
+    }, 35000);
+
     it('should reject invalid or malformed URLs', async () => {
       const res = await request(app)
         .post('/api/media/inspect')

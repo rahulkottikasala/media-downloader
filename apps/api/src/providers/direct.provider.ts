@@ -31,7 +31,7 @@ export class DirectMediaProvider implements MediaProvider {
       if (parsed.searchParams.has('format') || pathname.includes('/video/') || pathname.includes('/audio/')) {
         return true;
       }
-      return true;
+      return false;
     } catch {
       return false;
     }

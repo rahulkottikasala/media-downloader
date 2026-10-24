@@ -115,8 +115,10 @@ export class YtDlpService {
     const args = [
       '--no-warnings',
       '--no-check-certificates',
+      '--ffmpeg-location',
+      config.ffmpegPath,
       '-f',
-      'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b',
+      'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best',
       '--merge-output-format',
       'mp4',
       '-o',
