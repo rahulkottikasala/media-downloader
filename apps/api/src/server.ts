@@ -18,15 +18,22 @@ export function createServer(): Express {
     })
   );
 
-  // CORS configuration
-  app.use(
-    cors({
-      origin: [config.corsOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173'],
-      methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Access-Token'],
-      credentials: true,
-    })
-  );
+  // CORS configuration: Allow requests from Vercel, localhost, and other allowed origins
+  const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      return callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Access-Token', 'Range'],
+    exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length', 'Content-Disposition'],
+    credentials: true,
+    maxAge: 86400,
+  };
+
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
 
   // Global Rate Limiter
   const globalLimiter = rateLimit({

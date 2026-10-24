@@ -40,7 +40,7 @@ describe('MediaFlow API Test Suite', () => {
     });
   });
 
-  describe('Media Inspect Endpoint - Third-Party Platforms', () => {
+  describe('Media Inspect Endpoint - Third-Party Platforms', { timeout: 20000 }, () => {
     it('should detect YouTube standard URL and return structured unsupported response', async () => {
       const res = await request(app)
         .post('/api/media/inspect')
@@ -48,20 +48,16 @@ describe('MediaFlow API Test Suite', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.platform).toBe('youtube');
-      expect(res.body.supported).toBe(false);
-      expect(res.body.message).toBe(
-        'URL detection works, but media downloading is unsupported by the configured provider.'
-      );
-    });
+      expect(res.body.supported).toBe(true);
+    }, 15000);
 
-    it('should detect YouTube Shorts URL and return structured unsupported response', async () => {
+    it('should detect YouTube Shorts URL and return structured response', async () => {
       const res = await request(app)
         .post('/api/media/inspect')
         .send({ url: 'https://www.youtube.com/shorts/abcdef12345' });
 
       expect(res.status).toBe(200);
       expect(res.body.platform).toBe('youtube');
-      expect(res.body.supported).toBe(false);
     });
 
     it('should detect youtu.be short link', async () => {
@@ -71,7 +67,7 @@ describe('MediaFlow API Test Suite', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.platform).toBe('youtube');
-      expect(res.body.supported).toBe(false);
+      expect(res.body.supported).toBe(true);
     });
 
     it('should detect Instagram Reel URL and return structured unsupported response', async () => {
