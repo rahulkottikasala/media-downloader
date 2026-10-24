@@ -14,5 +14,9 @@ export interface MediaProvider {
   canHandle(url: string): boolean;
   inspect(url: string): Promise<MediaMetadata>;
   getFormats(url: string): Promise<MediaFormat[]>;
-  resolveAuthorizedSource(url: string, format?: MediaFormat): Promise<MediaSourceResolution>;
+  resolveAuthorizedSource(
+    url: string,
+    format?: MediaFormat,
+    onProgress?: (progressPercent: number, message: string) => void
+  ): Promise<MediaSourceResolution>;
 }

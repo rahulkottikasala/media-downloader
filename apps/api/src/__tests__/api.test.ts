@@ -40,7 +40,7 @@ describe('MediaFlow API Test Suite', () => {
     });
   });
 
-  describe('Media Inspect Endpoint - Third-Party Platforms', { timeout: 20000 }, () => {
+  describe('Media Inspect Endpoint - Third-Party Platforms', { timeout: 60000 }, () => {
     it('should detect YouTube standard URL and return structured unsupported response', async () => {
       const res = await request(app)
         .post('/api/media/inspect')

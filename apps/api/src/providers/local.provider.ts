@@ -54,6 +54,7 @@ export class LocalFileProvider implements MediaProvider {
         duration: probeInfo.durationSeconds,
         durationFormatted: probeInfo.durationFormatted,
         uploadId: cleanId,
+        previewUrl: `/api/media/stream/${cleanId}`,
         width: probeInfo.width,
         height: probeInfo.height,
         resolutionLabel: probeInfo.resolutionLabel,

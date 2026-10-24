@@ -261,7 +261,15 @@ export class JobManagerService {
           throw new Error(safeCheck.error || 'Blocked by security validation');
         }
 
-        const resolved = await provider.resolveAuthorizedSource(job.input.url, job.input.targetFormat);
+        const resolved = await provider.resolveAuthorizedSource(
+          job.input.url,
+          job.input.targetFormat,
+          (progressPercent, message) => {
+            job.progress = progressPercent;
+            job.message = message;
+            this.emitUpdate(job);
+          }
+        );
 
         if (resolved.filePath) {
           sourceFilePath = resolved.filePath;

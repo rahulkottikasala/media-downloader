@@ -13,6 +13,7 @@ export interface YtDlpMediaInfo {
   height?: number;
   uploader?: string;
   extractor?: string;
+  previewUrl?: string;
   isPlaylist?: boolean;
   entries?: Array<{
     id: string;
@@ -87,6 +88,17 @@ export class YtDlpService {
             });
           }
 
+          // Find playable preview URL if available
+          let previewUrl = json.url;
+          if (!previewUrl && Array.isArray(json.formats)) {
+            const playableFormat = json.formats
+              .filter((f: any) => f.url && (f.ext === 'mp4' || f.protocol?.startsWith('http')))
+              .sort((a: any, b: any) => (b.height || 0) - (a.height || 0))[0];
+            if (playableFormat) {
+              previewUrl = playableFormat.url;
+            }
+          }
+
           resolve({
             id: json.id,
             title: json.title || 'Video',
@@ -96,6 +108,7 @@ export class YtDlpService {
             height: json.height,
             uploader: json.uploader,
             extractor: json.extractor,
+            previewUrl,
             isPlaylist: false,
           });
         } catch (err: any) {
@@ -110,11 +123,16 @@ export class YtDlpService {
     });
   }
 
-  async download(url: string, outputDir: string, onProgress?: (msg: string) => void): Promise<string> {
+  async download(
+    url: string,
+    outputDir: string,
+    onProgress?: (progressPercent: number, message: string) => void
+  ): Promise<string> {
     const outputTemplate = path.join(outputDir, '%(title).80s-%(id)s.%(ext)s');
     const args = [
       '--no-warnings',
       '--no-check-certificates',
+      '--newline',
       '--ffmpeg-location',
       config.ffmpegPath,
       '-f',
@@ -133,7 +151,17 @@ export class YtDlpService {
       child.stdout.on('data', (d) => {
         const text = d.toString();
         if (onProgress) {
-          onProgress(text);
+          const pctMatch = text.match(/\[download\]\s+([\d.]+)%/i);
+          if (pctMatch) {
+            const rawPct = parseFloat(pctMatch[1]);
+            const mappedProgress = Math.min(65, Math.round(5 + (rawPct / 100) * 60));
+            const speedMatch = text.match(/at\s+([~0-9.]+\s*\w+\/s)/i);
+            const etaMatch = text.match(/ETA\s+([0-9:]+)/i);
+            const speedStr = speedMatch ? ` (${speedMatch[1]})` : '';
+            const etaStr = etaMatch ? ` • ETA ${etaMatch[1]}` : '';
+            const msg = `Downloading stream: ${rawPct.toFixed(0)}%${speedStr}${etaStr}`;
+            onProgress(mappedProgress, msg);
+          }
         }
       });
 

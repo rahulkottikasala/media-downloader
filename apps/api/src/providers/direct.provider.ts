@@ -136,6 +136,7 @@ export class DirectMediaProvider implements MediaProvider {
         duration: probeInfo.durationSeconds,
         durationFormatted: probeInfo.durationFormatted,
         sourceUrl: effectiveUrl,
+        previewUrl: `/api/media/proxy?url=${encodeURIComponent(effectiveUrl)}`,
         width: probeInfo.width,
         height: probeInfo.height,
         resolutionLabel: probeInfo.resolutionLabel,

@@ -53,6 +53,8 @@ export interface MediaMetadata {
   sourceUrl?: string;
   uploadId?: string;
   thumbnail?: string;
+  previewUrl?: string;
+  embedUrl?: string;
   width?: number;
   height?: number;
   resolutionLabel?: string;
@@ -72,6 +74,8 @@ export interface MediaMetadata {
     durationFormatted?: string;
     url: string;
     thumbnail?: string;
+  previewUrl?: string;
+  embedUrl?: string;
   }>;
   message?: string;
   error?: string;

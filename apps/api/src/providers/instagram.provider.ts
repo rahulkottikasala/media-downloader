@@ -95,7 +95,11 @@ export class InstagramProvider implements MediaProvider {
     return ['original', 'mp4', 'webm', 'mp3', 'm4a'];
   }
 
-  async resolveAuthorizedSource(url: string): Promise<MediaSourceResolution> {
+  async resolveAuthorizedSource(
+    url: string,
+    _format?: MediaFormat,
+    onProgress?: (progressPercent: number, message: string) => void
+  ): Promise<MediaSourceResolution> {
     if (!ytdlpService.isAvailable()) {
       throw new Error('URL detection works, but media downloading is unsupported by the configured provider.');
     }
@@ -103,7 +107,7 @@ export class InstagramProvider implements MediaProvider {
     const tempDownloadDir = path.join(config.tempDir, `igdl-${crypto.randomUUID()}`);
     fs.mkdirSync(tempDownloadDir, { recursive: true });
 
-    const downloadedFilePath = await ytdlpService.download(url, tempDownloadDir);
+    const downloadedFilePath = await ytdlpService.download(url, tempDownloadDir, onProgress);
 
     return {
       filePath: downloadedFilePath,

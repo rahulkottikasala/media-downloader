@@ -52,6 +52,24 @@ export class YouTubeProvider implements MediaProvider {
     }
   }
 
+  extractVideoId(url: string): string | null {
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname.toLowerCase() === 'youtu.be') {
+        return parsed.pathname.replace(/^\//, '').split('?')[0];
+      }
+      if (parsed.pathname.startsWith('/shorts/')) {
+        return parsed.pathname.replace('/shorts/', '').split('/')[0].split('?')[0];
+      }
+      if (parsed.pathname.startsWith('/embed/')) {
+        return parsed.pathname.replace('/embed/', '').split('/')[0].split('?')[0];
+      }
+      return parsed.searchParams.get('v');
+    } catch {
+      return null;
+    }
+  }
+
   async inspect(url: string): Promise<MediaMetadata> {
     if (ytdlpService.isAvailable()) {
       try {
@@ -68,11 +86,14 @@ export class YouTubeProvider implements MediaProvider {
           availableResolutions.push('1080p', '720p', '480p', '360p');
         }
 
+        const videoId = info.id || this.extractVideoId(url);
+
         return {
           supported: true,
           platform: 'youtube',
           title: info.title,
           thumbnail: info.thumbnail,
+          embedUrl: videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1` : undefined,
           duration: durationSec,
           durationFormatted: formatDuration(durationSec),
           sourceUrl: url,
@@ -121,7 +142,11 @@ export class YouTubeProvider implements MediaProvider {
     return ['original', 'mp4', 'webm', 'mp3', 'm4a', 'wav'];
   }
 
-  async resolveAuthorizedSource(url: string): Promise<MediaSourceResolution> {
+  async resolveAuthorizedSource(
+    url: string,
+    _format?: MediaFormat,
+    onProgress?: (progressPercent: number, message: string) => void
+  ): Promise<MediaSourceResolution> {
     if (!ytdlpService.isAvailable()) {
       throw new Error('URL detection works, but media downloading is unsupported by the configured provider.');
     }
@@ -129,7 +154,7 @@ export class YouTubeProvider implements MediaProvider {
     const tempDownloadDir = path.join(config.tempDir, `ytdl-${crypto.randomUUID()}`);
     fs.mkdirSync(tempDownloadDir, { recursive: true });
 
-    const downloadedFilePath = await ytdlpService.download(url, tempDownloadDir);
+    const downloadedFilePath = await ytdlpService.download(url, tempDownloadDir, onProgress);
 
     return {
       filePath: downloadedFilePath,

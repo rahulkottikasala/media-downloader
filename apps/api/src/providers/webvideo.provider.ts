@@ -58,6 +58,7 @@ export class WebVideoProvider implements MediaProvider {
           platform: 'webvideo',
           title: info.title || 'Web Video',
           thumbnail: info.thumbnail,
+          previewUrl: info.previewUrl ? `/api/media/proxy?url=${encodeURIComponent(info.previewUrl)}` : undefined,
           duration: durationSec,
           durationFormatted: formatDuration(durationSec),
           sourceUrl: url,
@@ -90,7 +91,11 @@ export class WebVideoProvider implements MediaProvider {
     return ['original', 'mp4', 'webm', 'mp3', 'm4a', 'wav'];
   }
 
-  async resolveAuthorizedSource(url: string): Promise<MediaSourceResolution> {
+  async resolveAuthorizedSource(
+    url: string,
+    _format?: MediaFormat,
+    onProgress?: (progressPercent: number, message: string) => void
+  ): Promise<MediaSourceResolution> {
     if (!ytdlpService.isAvailable()) {
       throw new Error('yt-dlp is required to extract this web video stream.');
     }
@@ -98,7 +103,7 @@ export class WebVideoProvider implements MediaProvider {
     const tempDownloadDir = path.join(config.tempDir, `webv-${crypto.randomUUID()}`);
     fs.mkdirSync(tempDownloadDir, { recursive: true });
 
-    const downloadedFilePath = await ytdlpService.download(url, tempDownloadDir);
+    const downloadedFilePath = await ytdlpService.download(url, tempDownloadDir, onProgress);
 
     return {
       filePath: downloadedFilePath,

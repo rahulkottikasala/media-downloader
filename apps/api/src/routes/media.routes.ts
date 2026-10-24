@@ -109,4 +109,98 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
   }
 });
 
+// GET /api/media/stream/:uploadId - Stream uploaded local file with 206 Partial Content
+router.get('/stream/:uploadId', (req: Request, res: Response) => {
+  const uploadId = Array.isArray(req.params.uploadId) ? req.params.uploadId[0] : req.params.uploadId;
+  const cleanId = path.basename(uploadId);
+  const filePath = path.join(config.uploadDir, cleanId);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Uploaded media file not found' });
+  }
+
+  const stat = fs.statSync(filePath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  let contentType = 'video/mp4';
+  const metaPath = path.join(config.uploadDir, `${cleanId}.json`);
+  if (fs.existsSync(metaPath)) {
+    try {
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+      if (meta.mimeType) contentType = meta.mimeType;
+    } catch {}
+  }
+
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+    if (start >= fileSize) {
+      res.status(416).send(`Requested range not satisfiable\n${start} >= ${fileSize}`);
+      return;
+    }
+
+    const chunksize = end - start + 1;
+    const file = fs.createReadStream(filePath, { start, end });
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunksize,
+      'Content-Type': contentType,
+    });
+    file.pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Length': fileSize,
+      'Accept-Ranges': 'bytes',
+      'Content-Type': contentType,
+    });
+    fs.createReadStream(filePath).pipe(res);
+  }
+});
+
+// GET /api/media/proxy - Proxy external media streams with range headers
+router.get('/proxy', async (req: Request, res: Response) => {
+  const targetUrl = req.query.url as string;
+  if (!targetUrl) {
+    return res.status(400).json({ error: 'Missing target url parameter' });
+  }
+
+  try {
+    const headers: Record<string, string> = {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+      Accept: '*/*',
+    };
+
+    if (req.headers.range) {
+      headers['Range'] = req.headers.range;
+    }
+
+    const upstream = await fetch(targetUrl, {
+      headers,
+    });
+
+    res.status(upstream.status);
+    upstream.headers.forEach((val, key) => {
+      const lower = key.toLowerCase();
+      if (['content-type', 'content-length', 'content-range', 'accept-ranges'].includes(lower)) {
+        res.setHeader(key, val);
+      }
+    });
+
+    if (upstream.body) {
+      const { Readable } = await import('stream');
+      // @ts-ignore
+      Readable.fromWeb(upstream.body).pipe(res);
+    } else {
+      res.end();
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: `Proxy stream failed: ${err.message}` });
+  }
+});
+
 export const mediaRouter: Router = router;

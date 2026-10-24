@@ -191,6 +191,7 @@ export class TeraboxProvider implements MediaProvider {
         platform: 'terabox',
         title: info.fileName,
         thumbnail: info.thumbnail,
+        previewUrl: info.downloadUrl ? `/api/media/proxy?url=${encodeURIComponent(info.downloadUrl)}` : undefined,
         sourceUrl: url,
         hasVideo: info.isVideo ?? true,
         hasAudio: true,

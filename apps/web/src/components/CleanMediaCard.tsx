@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import type { MediaMetadata, CreateJobInput, JobPublicDto, JobProgressEvent } from '@mediaflow/shared';
 import { createJob, getDownloadUrl, getApiBaseUrl } from '../api';
+import { InteractiveMediaPlayer } from './InteractiveMediaPlayer';
 
 interface CleanMediaCardProps {
   metadata: MediaMetadata;
@@ -44,46 +45,43 @@ export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onRese
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
-  // Subscribe to SSE updates when a job is active
+  // Subscribe to SSE updates when a job is active, with polling fallback
   useEffect(() => {
     if (!activeJob || activeJob.status === 'completed' || activeJob.status === 'failed') {
       return;
     }
 
+    let isSubscribed = true;
+
+    // Helper to handle terminal states & auto-download
+    const handleJobState = (job: JobPublicDto | JobProgressEvent) => {
+      setActiveJob((prev) => (prev ? { ...prev, ...job } : null));
+
+      if (job.status === 'ready' || job.status === 'completed') {
+        setIsProcessing(false);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = getDownloadUrl(activeJob.id, activeJob.accessToken);
+        downloadLink.download =
+          (job as any).outputFilename || activeJob.outputFilename || 'mediaflow-video';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+      } else if (job.status === 'failed' || job.status === 'cancelled') {
+        setIsProcessing(false);
+      }
+    };
+
+    // 1. EventSource connection
     const eventSource = new EventSource(
       `${getApiBaseUrl()}/jobs/${activeJob.id}/events?token=${encodeURIComponent(activeJob.accessToken)}`
     );
 
     eventSource.onmessage = (e) => {
+      if (!isSubscribed) return;
       try {
         const data: JobProgressEvent = JSON.parse(e.data);
-        setActiveJob((prev) =>
-          prev
-            ? {
-                ...prev,
-                status: data.status,
-                progress: data.progress,
-                stage: data.stage,
-                message: data.message || prev.message,
-                outputSize: data.outputSize || prev.outputSize,
-                originalSize: data.originalSize || prev.originalSize,
-                error: data.error || prev.error,
-              }
-            : null
-        );
-
-        if (data.status === 'ready' || data.status === 'completed') {
-          setIsProcessing(false);
-          eventSource.close();
-          // Auto-trigger browser download
-          const downloadLink = document.createElement('a');
-          downloadLink.href = getDownloadUrl(activeJob.id, activeJob.accessToken);
-          downloadLink.download = activeJob.outputFilename || 'mediaflow-video';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          downloadLink.remove();
-        } else if (data.status === 'failed' || data.status === 'cancelled') {
-          setIsProcessing(false);
+        handleJobState(data);
+        if (data.status === 'ready' || data.status === 'completed' || data.status === 'failed') {
           eventSource.close();
         }
       } catch {}
@@ -93,8 +91,32 @@ export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onRese
       eventSource.close();
     };
 
+    // 2. Resilient Polling Fallback every 2 seconds
+    const pollInterval = setInterval(async () => {
+      if (!isSubscribed) return;
+      try {
+        const res = await fetch(
+          `${getApiBaseUrl()}/jobs/${activeJob.id}?token=${encodeURIComponent(activeJob.accessToken)}`
+        );
+        if (res.ok) {
+          const jobData: JobPublicDto = await res.json();
+          handleJobState(jobData);
+          if (
+            jobData.status === 'ready' ||
+            jobData.status === 'completed' ||
+            jobData.status === 'failed'
+          ) {
+            clearInterval(pollInterval);
+            eventSource.close();
+          }
+        }
+      } catch {}
+    }, 2000);
+
     return () => {
+      isSubscribed = false;
       eventSource.close();
+      clearInterval(pollInterval);
     };
   }, [activeJob?.id, activeJob?.accessToken]);
 
@@ -146,23 +168,10 @@ export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onRese
       className="clean-card p-5 sm:p-6 w-full max-w-2xl mx-auto space-y-6"
     >
       {/* Video Preview & Info Row */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-        {metadata.thumbnail ? (
-          <div className="w-full sm:w-44 h-32 rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0 relative shadow-sm">
-            <img
-              src={metadata.thumbnail}
-              alt={metadata.title}
-              className="w-full h-full object-cover"
-            />
-            <span className="absolute bottom-2 right-2 text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-md bg-black/70 text-white backdrop-blur-sm">
-              {getPlatformLabel(metadata.platform)}
-            </span>
-          </div>
-        ) : (
-          <div className="w-full sm:w-44 h-32 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center shrink-0">
-            <Film className="w-8 h-8 text-zinc-400" />
-          </div>
-        )}
+      <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
+        <div className="w-full sm:w-56 shrink-0">
+          <InteractiveMediaPlayer metadata={metadata} />
+        </div>
 
         <div className="flex-1 min-w-0 space-y-1.5 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-2">
@@ -239,6 +248,19 @@ export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onRese
                   <Download className="w-3.5 h-3.5" />
                   Save File
                 </a>
+              </div>
+            )}
+
+            {activeJob.status === 'failed' && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-center justify-between">
+                <span>{activeJob.error || activeJob.message || 'Processing failed. Please try again.'}</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveJob(null)}
+                  className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 transition-colors font-medium text-[11px]"
+                >
+                  Dismiss
+                </button>
               </div>
             )}
           </motion.div>
