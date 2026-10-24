@@ -1,0 +1,50 @@
+name: CI - Test & Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    name: Build & Run Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System FFmpeg & yt-dlp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg curl
+          sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+          sudo chmod a+rx /usr/local/bin/yt-dlp
+          ffmpeg -version
+          yt-dlp --version
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Packages
+        run: pnpm build
+
+      - name: Run Vitest Unit Tests
+        run: pnpm test
+
+      - name: Generate Fixtures & Run Full Integration Test Suite
+        run: |
+          pnpm fixtures
+          node scripts/run-all-tests.mjs

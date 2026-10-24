@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#111216] text-zinc-100 font-sans min-h-screen antialiased selection:bg-zinc-700 selection:text-white transition-colors duration-200;
+  }
+
+  html.light body {
+    @apply bg-[#F9FAFB] text-zinc-900 selection:bg-zinc-200 selection:text-zinc-900;
+  }
+}
+
+/* Minimal clean card */
+.clean-card {
+  @apply bg-[#181920] border border-white/[0.08] rounded-3xl shadow-sm transition-all;
+}
+
+html.light .clean-card {
+  @apply bg-white border border-zinc-200/80 shadow-sm;
+}
+
+/* Subtle clean input */
+.clean-input {
+  @apply bg-[#181920] border border-white/[0.1] text-zinc-100 rounded-2xl transition-all;
+}
+
+html.light .clean-input {
+  @apply bg-white border border-zinc-200 text-zinc-800;
+}
+
+/* Cute pill */
+.cute-pill {
+  @apply px-3 py-1.5 rounded-full text-xs font-medium transition-all;
+}

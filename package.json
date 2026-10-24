@@ -1,0 +1,28 @@
+{
+  "name": "mediaflow-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-quality Media Downloader & Converter",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @mediaflow/api --filter @mediaflow/web dev",
+    "dev:api": "pnpm --filter @mediaflow/api dev",
+    "dev:web": "pnpm --filter @mediaflow/web dev",
+    "build": "pnpm --filter @mediaflow/shared build && pnpm --filter @mediaflow/api build && pnpm --filter @mediaflow/web build",
+    "start": "pnpm --filter @mediaflow/api start",
+    "test": "pnpm --filter @mediaflow/api test && pnpm --filter @mediaflow/web test",
+    "test:unit": "pnpm --filter @mediaflow/api test",
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "fixtures": "node scripts/generate-fixtures.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mediaflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mediaflow-app
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:5173
+    tmpfs:
+      - /tmp/mediaflow-jobs:rw,noexec,nosuid,size=2G
+      - /tmp/mediaflow-uploads:rw,noexec,nosuid,size=2G
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
