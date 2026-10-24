@@ -130,6 +130,7 @@ export class YouTubeProvider implements MediaProvider {
       supported: false,
       platform: 'youtube',
       title: `${subtypeLabel} Detected`,
+      sourceUrl: url,
       hasVideo: false,
       hasAudio: false,
       availableResolutions: ['original'],

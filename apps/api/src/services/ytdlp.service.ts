@@ -35,6 +35,8 @@ export class YtDlpService {
       '--dump-single-json',
       '--no-warnings',
       '--no-check-certificates',
+      '--extractor-args',
+      'youtube:player_client=ios,android,web',
     ];
 
     if (isPlaylist) {
@@ -135,6 +137,8 @@ export class YtDlpService {
       '--newline',
       '--ffmpeg-location',
       config.ffmpegPath,
+      '--extractor-args',
+      'youtube:player_client=ios,android,web',
       '-f',
       'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best',
       '--merge-output-format',

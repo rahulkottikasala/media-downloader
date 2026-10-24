@@ -207,6 +207,7 @@ export class TeraboxProvider implements MediaProvider {
         supported: false,
         platform: 'terabox',
         title: shareId ? `TeraBox File (${shareId})` : 'TeraBox File Detected',
+        sourceUrl: url,
         hasVideo: false,
         hasAudio: false,
         availableResolutions: ['original'],
@@ -221,7 +222,11 @@ export class TeraboxProvider implements MediaProvider {
     return ['original', 'mp4', 'webm', 'mp3', 'm4a', 'wav'];
   }
 
-  async resolveAuthorizedSource(url: string): Promise<MediaSourceResolution> {
+  async resolveAuthorizedSource(
+    url: string,
+    _format?: MediaFormat,
+    onProgress?: (progressPercent: number, message: string) => void
+  ): Promise<MediaSourceResolution> {
     const info = await this.fetchPageInfo(url);
 
     if (!info.downloadUrl) {
@@ -248,9 +253,29 @@ export class TeraboxProvider implements MediaProvider {
       throw new Error(`Failed to fetch TeraBox download stream: HTTP ${res.status}`);
     }
 
+    const totalBytes = parseInt(res.headers.get('content-length') || '0', 10);
+    let downloadedBytes = 0;
     const fileStream = fs.createWriteStream(tempFilePath);
+
     // @ts-ignore
-    await pipeline(res.body, fileStream);
+    if (typeof res.body.getReader === 'function') {
+      // @ts-ignore
+      const reader = res.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        downloadedBytes += value.length;
+        fileStream.write(value);
+        if (totalBytes > 0 && onProgress) {
+          const pct = Math.min(65, Math.round((downloadedBytes / totalBytes) * 60) + 5);
+          onProgress(pct, `Downloading from TeraBox: ${formatBytes(downloadedBytes)} / ${formatBytes(totalBytes)}`);
+        }
+      }
+      await new Promise<void>((resolve) => fileStream.end(resolve));
+    } else {
+      // @ts-ignore
+      await pipeline(res.body, fileStream);
+    }
 
     return {
       filePath: tempFilePath,

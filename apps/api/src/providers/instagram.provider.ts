@@ -83,6 +83,7 @@ export class InstagramProvider implements MediaProvider {
       supported: false,
       platform: 'instagram',
       title: `${subtypeLabel} Detected`,
+      sourceUrl: url,
       hasVideo: false,
       hasAudio: false,
       availableResolutions: ['original'],

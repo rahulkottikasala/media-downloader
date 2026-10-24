@@ -131,9 +131,16 @@ export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onRese
     setIsProcessing(true);
 
     try {
+      const targetUrl = metadata.sourceUrl || (metadata as any).url;
+      const targetUploadId = metadata.uploadId;
+
+      if (!targetUrl && !targetUploadId) {
+        throw new Error('Valid media URL or upload ID is missing.');
+      }
+
       const input: CreateJobInput = {
-        url: metadata.sourceUrl,
-        uploadId: metadata.uploadId,
+        url: targetUrl,
+        uploadId: targetUploadId,
         outputType,
         targetFormat,
         compressionPreset,
@@ -198,6 +205,17 @@ export const CleanMediaCard: React.FC<CleanMediaCardProps> = ({ metadata, onRese
           <p className="text-xs text-zinc-400">
             Choose a format below to convert and download immediately.
           </p>
+
+          {metadata.message && (
+            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200 leading-relaxed text-left">
+              {metadata.message}
+            </div>
+          )}
+          {metadata.error && (
+            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-300 leading-relaxed text-left">
+              {metadata.error}
+            </div>
+          )}
         </div>
       </div>
 

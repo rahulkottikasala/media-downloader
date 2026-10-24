@@ -79,6 +79,7 @@ export class WebVideoProvider implements MediaProvider {
       supported: false,
       platform: 'webvideo',
       title: 'Web Video Detected',
+      sourceUrl: url,
       hasVideo: false,
       hasAudio: false,
       availableResolutions: ['original'],
